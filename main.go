@@ -14,8 +14,6 @@ import (
 	"github.com/mrekucci/todo/internal/task"
 )
 
-var addrFlag = flag.String("addr", "127.0.0.1:8080", "address:port on which the server will be listening")
-
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: todo [options]\n")
 	fmt.Fprintf(os.Stderr, "Options:\n")
@@ -40,6 +38,8 @@ func corsHeaders(fn http.HandlerFunc) http.HandlerFunc {
 func main() {
 	log.SetFlags(0)
 	log.SetPrefix("todo: ")
+
+	addrFlag := flag.String("addr", "127.0.0.1:8080", "address:port on which the server will be listening")
 	flag.Usage = usage
 	flag.Parse()
 
