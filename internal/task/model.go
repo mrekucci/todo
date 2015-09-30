@@ -154,6 +154,9 @@ func (m *inMemory) Delete(id int) error {
 	for i, t := range m.tasks {
 		if t.ID == id {
 			m.tasks, m.tasks[m.Count()-1] = append(m.tasks[:i], m.tasks[i+1:]...), nil
+			if cap(m.tasks) > 64 && float64(m.Count()/cap(m.tasks)) < 0.75 { // Free memory when the length of a slice shrunk enough.
+				m.tasks = append([]*Task(nil), m.tasks...)
+			}
 			return nil
 		}
 	}
