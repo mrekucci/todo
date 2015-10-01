@@ -15,21 +15,21 @@ import (
 // Path specifies the task resource path.
 const Path = "/task/"
 
-type errRequest struct {
+type requestError struct {
 	error
 	code int
 }
 
-func (e *errRequest) Error() string {
-	return fmt.Sprintf("%d %v", e.code, e.error)
+func (re *requestError) Error() string {
+	return fmt.Sprintf("%d %v", re.code, re.error)
 }
 
-func badRequestError(err error) *errRequest {
-	return &errRequest{err, http.StatusBadRequest}
+func badRequestError(err error) *requestError {
+	return &requestError{err, http.StatusBadRequest}
 }
 
-func notFoundError(err error) *errRequest {
-	return &errRequest{err, http.StatusNotFound}
+func notFoundError(err error) *requestError {
+	return &requestError{err, http.StatusNotFound}
 }
 
 type handler func(http.ResponseWriter, *http.Request) error
@@ -82,7 +82,7 @@ func errorHandler(w http.ResponseWriter, err error) {
 		return
 	}
 	switch e := err.(type) {
-	case *errRequest:
+	case *requestError:
 		http.Error(w, e.Error(), e.code)
 	default:
 		log.Println(e)
