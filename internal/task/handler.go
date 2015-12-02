@@ -32,8 +32,6 @@ func notFoundError(err error) *requestError {
 	return &requestError{err, http.StatusNotFound}
 }
 
-type handler func(http.ResponseWriter, *http.Request) error
-
 var tasks = NewManager()
 
 var filters = map[string]Filter{
@@ -99,8 +97,7 @@ func create(w http.ResponseWriter, r *http.Request) error {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return badRequestError(err)
 	}
-	_, err := tasks.Create(req.Title)
-	if err != nil {
+	if _, err := tasks.Create(req.Title); err != nil {
 		return badRequestError(err)
 	}
 	return nil
@@ -124,14 +121,12 @@ func readAll(w http.ResponseWriter, r *http.Request) error {
 	t := tasks.All()
 
 	// Apply filter.
-	byFieldEq, ok := filters[r.URL.Query().Get("filter")]
-	if ok {
+	if byFieldEq, ok := filters[r.URL.Query().Get("filter")]; ok {
 		t = Filter(byFieldEq).Tasks(t)
 	}
 
 	// Apply sorter.
-	byField, ok := sorters[r.URL.Query().Get("sortBy")]
-	if ok {
+	if byField, ok := sorters[r.URL.Query().Get("sortBy")]; ok {
 		Sort(byField).Tasks(t)
 	}
 

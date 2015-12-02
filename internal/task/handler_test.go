@@ -139,8 +139,8 @@ func TestReadAllReq(t *testing.T) {
 			t.Errorf("Recieve body: %q", rec.Body)
 		}
 
-		tt = append(tt, task)
 		body := rec.Body.String()
+		tt = append(tt, task)
 		json, err := json.Marshal(
 			struct {
 				Tasks []*Task `json:"tasks"`

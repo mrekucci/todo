@@ -25,12 +25,12 @@ func usage() {
 // Function also handles pre-flight requests.
 func corsHeaders(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		if r.Method == "OPTIONS" { // Stop the pre-flight request.
 			return
 		}
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		fn(w, r)
 	}
 }
@@ -44,7 +44,7 @@ func main() {
 	flag.Parse()
 
 	http.Handle(task.Path, http.HandlerFunc(corsHeaders(task.RestAPI)))
-	http.Handle("/", http.FileServer(http.Dir("frontend/web")))
+	http.Handle("/", http.FileServer(http.Dir("web")))
 	if err := http.ListenAndServe(*addrFlag, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
