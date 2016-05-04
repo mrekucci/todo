@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 // Path specifies the task resource path.
@@ -32,7 +33,10 @@ func notFoundError(err error) *requestError {
 	return &requestError{err, http.StatusNotFound}
 }
 
-var tasks = NewManager()
+var (
+	mu sync.RWMutex
+	tasks = NewManager()
+)
 
 var filters = map[string]Filter{
 	"isDone":      func(t *Task) bool { return t.Done },
@@ -97,7 +101,10 @@ func create(w http.ResponseWriter, r *http.Request) error {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return badRequestError(err)
 	}
-	if _, err := tasks.Create(req.Title); err != nil {
+	mu.Lock()
+	_, err := tasks.Create(req.Title)
+	mu.Unlock()
+	if err != nil {
 		return badRequestError(err)
 	}
 	return nil
@@ -109,6 +116,8 @@ func read(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return badRequestError(err)
 	}
+	mu.RLock()
+	defer mu.RUnlock()
 	t, ok := tasks.Find(id)
 	if !ok {
 		return notFoundError(fmt.Errorf("task id: %d doesn't exists", id))
@@ -118,6 +127,8 @@ func read(w http.ResponseWriter, r *http.Request) error {
 
 // readAll handles requests for the reads of all tasks.
 func readAll(w http.ResponseWriter, r *http.Request) error {
+	mu.RLock()
+	defer mu.RUnlock()
 	t := tasks.All()
 
 	// Apply filter.
@@ -151,7 +162,10 @@ func update(w http.ResponseWriter, r *http.Request) error {
 	if t.ID != id {
 		return badRequestError(fmt.Errorf("inconsistent task IDs"))
 	}
-	if _, ok := tasks.Find(id); !ok {
+	mu.Lock()
+	defer mu.Unlock()
+	_, ok := tasks.Find(id)
+	if !ok {
 		return notFoundError(fmt.Errorf("task id: %d doesn't exists", id))
 	}
 	return tasks.Update(t)
@@ -163,6 +177,8 @@ func delete(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return badRequestError(err)
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	return tasks.Delete(id)
 }
 
